@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Perfect Tip</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: black;
+            overflow: hidden;
+            height: 100vh;
+            font-family: sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+
+        /* --- STIL FOR INNSTILLINGER --- */
+        #settingsBtn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #0F0;
+            border: 1px solid #0F0;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px 10px;
+            z-index: 100;
+            border-radius: 5px;
+        }
+        #settingsBtn:hover {
+            background: #0F0;
+            color: black;
+        }
+
+        #settingsPanel {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            width: 250px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #0F0;
+            padding: 15px;
+            color: #0F0;
+            z-index: 100;
+            border-radius: 5px;
+            box-shadow: 0 0 10px #0F0;
+        }
+
+        .control-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; }
+        input[type="range"] { width: 100%; accent-color: #0F0; }
+        input[type="color"] { width: 100%; border: none; height: 30px; cursor: pointer; }
+        .value-display { float: right; font-size: 12px; color: #FFF; }
+    </style>
+</head>
+<body>
+
+    <canvas id="matrixCanvas"></canvas>
+
+    <button id="settingsBtn" onclick="toggleSettings()">⚙️</button>
+    
+    <div id="settingsPanel">
+        <h3 style="margin-top:0; border-bottom: 1px solid #0F0; padding-bottom:5px;">Konfigurasjon</h3>
+        
+        <div class="control-group">
+            <label>Farge <span id="valColor" class="value-display"></span></label>
+            <input type="color" id="inputColor" value="#00FF00">
+        </div>
+
+        <div class="control-group">
+            <label>Skriftstørrelse: <span id="valSize" class="value-display">16</span></label>
+            <input type="range" id="inputSize" min="10" max="40" value="16">
+        </div>
+
+        <div class="control-group">
+            <label>Fade (Halelengde): <span id="valFade" class="value-display">0.08</span></label>
+            <input type="range" id="inputFade" min="0.01" max="0.3" step="0.01" value="0.08">
+        </div>
+
+        <div class="control-group">
+            <label>Min Hastighet: <span id="valMinSpeed" class="value-display">0.15</span></label>
+            <input type="range" id="inputMinSpeed" min="0.05" max="2.0" step="0.05" value="0.15">
+        </div>
+
+        <div class="control-group">
+            <label>Maks Hastighet: <span id="valMaxSpeed" class="value-display">1.0</span></label>
+            <input type="range" id="inputMaxSpeed" min="0.5" max="5.0" step="0.1" value="1.0">
+        </div>
+
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="inputWhiteTip" checked> Vis hvit tupp
+            </label>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const config = {
+            color: '#0F0',
+            fontSize: 16,
+            fade: 0.08,
+            minSpeed: 0.15,
+            maxSpeed: 1.0,
+            whiteTip: true
+        };
+
+        const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+        const alphabet = katakana + latin + nums;
+
+        let columns;
+        let drops = [];
+        let speeds = [];
+        let accumulators = [];
+        // Vi trenger å huske hvilket tegn vi tegnet sist for hver kolonne, 
+        // slik at vi kan tegne det på nytt i grønt når tuppen flytter seg.
+        let lastChars = []; 
+
+        const panel = document.getElementById('settingsPanel');
+        function toggleSettings() { panel.style.display = panel.style.display === 'block' ? 'none' : 'block'; }
+
+        document.getElementById('inputColor').addEventListener('input', (e) => {
+            config.color = e.target.value;
+            document.getElementById('settingsBtn').style.color = config.color;
+            document.getElementById('settingsBtn').style.borderColor = config.color;
+            panel.style.borderColor = config.color;
+            panel.style.color = config.color;
+        });
+        document.getElementById('inputSize').addEventListener('input', (e) => {
+            config.fontSize = parseInt(e.target.value);
+            document.getElementById('valSize').innerText = config.fontSize;
+            setup();
+        });
+        document.getElementById('inputFade').addEventListener('input', (e) => {
+            config.fade = parseFloat(e.target.value);
+            document.getElementById('valFade').innerText = config.fade;
+        });
+        document.getElementById('inputMinSpeed').addEventListener('input', (e) => {
+            config.minSpeed = parseFloat(e.target.value);
+            document.getElementById('valMinSpeed').innerText = config.minSpeed;
+            updateSpeeds();
+        });
+        document.getElementById('inputMaxSpeed').addEventListener('input', (e) => {
+            config.maxSpeed = parseFloat(e.target.value);
+            document.getElementById('valMaxSpeed').innerText = config.maxSpeed;
+            updateSpeeds();
+        });
+        document.getElementById('inputWhiteTip').addEventListener('change', (e) => { config.whiteTip = e.target.checked; });
+
+        function setup() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            columns = Math.ceil(canvas.width / config.fontSize);
+            drops = [];
+            accumulators = [];
+            lastChars = []; // Nullstill tegn-minnet
+            
+            updateSpeeds(true);
+            for (let x = 0; x < columns; x++) {
+                drops[x] = 1; 
+                accumulators[x] = 0;
+                lastChars[x] = ""; // Start tom
+            }
+        }
+
+        function updateSpeeds(reset = false) {
+            if (reset) speeds = [];
+            for (let x = 0; x < columns; x++) {
+                if (!speeds[x] || reset) {
+                     speeds[x] = (Math.random() * (config.maxSpeed - config.minSpeed)) + config.minSpeed;
+                }
+            }
+        }
+
+        function draw() {
+            // Fade bakgrunnen
+            ctx.fillStyle = `rgba(0, 0, 0, ${config.fade})`; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.font = config.fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                if (!speeds[i]) speeds[i] = config.minSpeed;
+                
+                accumulators[i] += speeds[i];
+
+                if (accumulators[i] >= 1) {
+                    // Posisjoner
+                    const x = i * config.fontSize;
+                    const y = drops[i] * config.fontSize;
+                    const prevY = y - config.fontSize;
+
+                    // Velg nytt tegn for TUPPEN
+                    const newChar = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+
+                    // --- STEG 1: Fiks det forrige tegnet (som var hvitt) ---
+                    if (drops[i] > 1 && lastChars[i]) {
+                        // Vask bort det hvite tegnet med en svart boks
+                        ctx.fillStyle = 'black';
+                        ctx.fillRect(x, prevY, config.fontSize, config.fontSize);
+                        
+                        // Tegn det SAMME tegnet som var der, men nå i GRØNT (eller valgt farge)
+                        ctx.fillStyle = config.color;
+                        ctx.fillText(lastChars[i], x, prevY);
+                    }
+
+                    // --- STEG 2: Tegn den nye tuppen ---
+                    if (config.whiteTip) {
+                        ctx.fillStyle = '#FFF'; // Hvit
+                    } else {
+                        ctx.fillStyle = config.color; 
+                    }
+                    ctx.fillText(newChar, x, y);
+
+                    // --- STEG 3: Lagre tegnet ---
+                    // Vi lagrer 'newChar' slik at vi vet hva vi skal tegne grønt i neste runde
+                    lastChars[i] = newChar;
+
+                    accumulators[i] -= 1;
+
+                    // Reset
+                    if (drops[i] * config.fontSize > canvas.height && Math.random() > 0.96) {
+                        drops[i] = 0;
+                        speeds[i] = (Math.random() * (config.maxSpeed - config.minSpeed)) + config.minSpeed;
+                        lastChars[i] = ""; // Reset minnet for denne kolonnen
+                    }
+
+                    drops[i]++;
+                }
+            }
+        }
+
+        setup();
+        setInterval(draw, 20);
+        window.addEventListener('resize', setup);
+
+    </script>
+</body>
+</html>
