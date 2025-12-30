@@ -54,4 +54,4 @@ This project is licensed under the **GNU General Public License v3.0** - see the
 
 ---
 
-*Created with code and creativity.*
+*Created with code and creativity togheter with Google Gemini 3.*
