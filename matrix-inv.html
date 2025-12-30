@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matrix Perfect Tip</title>
+    <title>Matrix Ultimate Edition</title>
     <style>
         body {
             margin: 0;
@@ -11,18 +11,16 @@
             background-color: black;
             overflow: hidden;
             height: 100vh;
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        canvas {
-            display: block;
-        }
+        canvas { display: block; }
 
         /* --- STIL FOR INNSTILLINGER --- */
         #settingsBtn {
             position: absolute;
             top: 10px;
             right: 10px;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.6);
             color: #0F0;
             border: 1px solid #0F0;
             font-size: 24px;
@@ -30,32 +28,60 @@
             padding: 5px 10px;
             z-index: 100;
             border-radius: 5px;
+            transition: all 0.3s;
         }
         #settingsBtn:hover {
-            background: #0F0;
-            color: black;
+            background: rgba(0, 255, 0, 0.2);
+            transform: scale(1.1);
         }
 
         #settingsPanel {
             display: none;
             position: absolute;
-            top: 50px;
+            top: 60px;
             right: 10px;
-            width: 250px;
-            background: rgba(0, 0, 0, 0.9);
+            width: 270px;
+            background: rgba(10, 10, 10, 0.95);
             border: 1px solid #0F0;
-            padding: 15px;
+            padding: 20px;
             color: #0F0;
             z-index: 100;
-            border-radius: 5px;
-            box-shadow: 0 0 10px #0F0;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+            backdrop-filter: blur(5px);
         }
 
-        .control-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-size: 14px; }
-        input[type="range"] { width: 100%; accent-color: #0F0; }
-        input[type="color"] { width: 100%; border: none; height: 30px; cursor: pointer; }
-        .value-display { float: right; font-size: 12px; color: #FFF; }
+        .control-group { margin-bottom: 18px; }
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-size: 14px; 
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        input[type="range"] { width: 100%; accent-color: currentColor; cursor: pointer; }
+        input[type="color"] { width: 100%; border: none; height: 35px; cursor: pointer; background: none; padding: 0; }
+        
+        /* Styling for dropdown meny */
+        select {
+            width: 100%;
+            padding: 8px;
+            background: #000;
+            color: currentColor;
+            border: 1px solid currentColor;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        select:focus { outline: none; box-shadow: 0 0 5px currentColor; }
+
+        .checkbox-wrapper { display: flex; align-items: center; cursor: pointer; }
+        .checkbox-wrapper input { margin-right: 10px; transform: scale(1.2); accent-color: currentColor; }
+
+        .value-display { float: right; font-size: 12px; opacity: 0.8; }
+        h3 { margin-top: 0; border-bottom: 1px solid currentColor; padding-bottom: 10px; text-align: center; }
     </style>
 </head>
 <body>
@@ -65,35 +91,44 @@
     <button id="settingsBtn" onclick="toggleSettings()">⚙️</button>
     
     <div id="settingsPanel">
-        <h3 style="margin-top:0; border-bottom: 1px solid #0F0; padding-bottom:5px;">Konfigurasjon</h3>
+        <h3>System Config</h3>
         
         <div class="control-group">
-            <label>Farge <span id="valColor" class="value-display"></span></label>
+            <label>Farge Modus</label>
+            <select id="inputColorMode">
+                <option value="mono">Ensfarget (Standard)</option>
+                <option value="rainbow">Regnbue (Ryddig)</option>
+                <option value="chaos">Tivoli (Kaos)</option>
+            </select>
+        </div>
+
+        <div class="control-group" id="colorGroup">
+            <label>Valgt Farge</label>
             <input type="color" id="inputColor" value="#00FF00">
         </div>
 
         <div class="control-group">
-            <label>Skriftstørrelse: <span id="valSize" class="value-display">16</span></label>
+            <label>Tekststørrelse <span id="valSize" class="value-display">16px</span></label>
             <input type="range" id="inputSize" min="10" max="40" value="16">
         </div>
 
         <div class="control-group">
-            <label>Fade (Halelengde): <span id="valFade" class="value-display">0.08</span></label>
+            <label>Fade (Hale) <span id="valFade" class="value-display">0.08</span></label>
             <input type="range" id="inputFade" min="0.01" max="0.3" step="0.01" value="0.08">
         </div>
 
         <div class="control-group">
-            <label>Min Hastighet: <span id="valMinSpeed" class="value-display">0.15</span></label>
+            <label>Min Fart <span id="valMinSpeed" class="value-display">0.15</span></label>
             <input type="range" id="inputMinSpeed" min="0.05" max="2.0" step="0.05" value="0.15">
         </div>
 
         <div class="control-group">
-            <label>Maks Hastighet: <span id="valMaxSpeed" class="value-display">1.0</span></label>
+            <label>Maks Fart <span id="valMaxSpeed" class="value-display">1.0</span></label>
             <input type="range" id="inputMaxSpeed" min="0.5" max="5.0" step="0.1" value="1.0">
         </div>
 
         <div class="control-group">
-            <label>
+            <label class="checkbox-wrapper">
                 <input type="checkbox" id="inputWhiteTip" checked> Vis hvit tupp
             </label>
         </div>
@@ -103,13 +138,15 @@
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
 
+        // Standard konfigurasjon
         const config = {
             color: '#0F0',
             fontSize: 16,
             fade: 0.08,
             minSpeed: 0.15,
             maxSpeed: 1.0,
-            whiteTip: true
+            whiteTip: true,
+            colorMode: 'mono' // 'mono', 'rainbow', eller 'chaos'
         };
 
         const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
@@ -121,40 +158,74 @@
         let drops = [];
         let speeds = [];
         let accumulators = [];
-        // Vi trenger å huske hvilket tegn vi tegnet sist for hver kolonne, 
-        // slik at vi kan tegne det på nytt i grønt når tuppen flytter seg.
         let lastChars = []; 
 
         const panel = document.getElementById('settingsPanel');
-        function toggleSettings() { panel.style.display = panel.style.display === 'block' ? 'none' : 'block'; }
+        const btn = document.getElementById('settingsBtn');
+        const colorGroup = document.getElementById('colorGroup');
+
+        function toggleSettings() { 
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block'; 
+        }
+
+        // --- Oppdaterer UI-farger dynamisk ---
+        function updateUIColors() {
+            // Hvis mono, bruk valgt farge. Hvis ikke, bruk hvit.
+            let uiColor = config.colorMode === 'mono' ? config.color : '#FFFFFF';
+            
+            panel.style.borderColor = uiColor;
+            panel.style.color = uiColor;
+            panel.querySelector('h3').style.borderColor = uiColor;
+            btn.style.borderColor = uiColor;
+            btn.style.color = uiColor;
+            
+            // Skjul fargevelger hvis vi ikke er i 'mono' modus
+            if (config.colorMode === 'mono') {
+                colorGroup.style.opacity = '1';
+                colorGroup.style.pointerEvents = 'auto';
+            } else {
+                colorGroup.style.opacity = '0.3';
+                colorGroup.style.pointerEvents = 'none';
+            }
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('inputColorMode').addEventListener('change', (e) => {
+            config.colorMode = e.target.value;
+            updateUIColors();
+        });
 
         document.getElementById('inputColor').addEventListener('input', (e) => {
             config.color = e.target.value;
-            document.getElementById('settingsBtn').style.color = config.color;
-            document.getElementById('settingsBtn').style.borderColor = config.color;
-            panel.style.borderColor = config.color;
-            panel.style.color = config.color;
+            updateUIColors();
         });
+        
         document.getElementById('inputSize').addEventListener('input', (e) => {
             config.fontSize = parseInt(e.target.value);
-            document.getElementById('valSize').innerText = config.fontSize;
+            document.getElementById('valSize').innerText = config.fontSize + "px";
             setup();
         });
+        
         document.getElementById('inputFade').addEventListener('input', (e) => {
             config.fade = parseFloat(e.target.value);
             document.getElementById('valFade').innerText = config.fade;
         });
+        
         document.getElementById('inputMinSpeed').addEventListener('input', (e) => {
             config.minSpeed = parseFloat(e.target.value);
             document.getElementById('valMinSpeed').innerText = config.minSpeed;
             updateSpeeds();
         });
+        
         document.getElementById('inputMaxSpeed').addEventListener('input', (e) => {
             config.maxSpeed = parseFloat(e.target.value);
             document.getElementById('valMaxSpeed').innerText = config.maxSpeed;
             updateSpeeds();
         });
-        document.getElementById('inputWhiteTip').addEventListener('change', (e) => { config.whiteTip = e.target.checked; });
+        
+        document.getElementById('inputWhiteTip').addEventListener('change', (e) => { 
+            config.whiteTip = e.target.checked; 
+        });
 
         function setup() {
             canvas.width = window.innerWidth;
@@ -162,13 +233,13 @@
             columns = Math.ceil(canvas.width / config.fontSize);
             drops = [];
             accumulators = [];
-            lastChars = []; // Nullstill tegn-minnet
+            lastChars = []; 
             
             updateSpeeds(true);
             for (let x = 0; x < columns; x++) {
                 drops[x] = 1; 
                 accumulators[x] = 0;
-                lastChars[x] = ""; // Start tom
+                lastChars[x] = ""; 
             }
         }
 
@@ -181,59 +252,77 @@
             }
         }
 
+        // Funksjon for å hente farge basert på modus
+        function getColor(colIndex) {
+            if (config.colorMode === 'mono') {
+                return config.color;
+            } 
+            else if (config.colorMode === 'rainbow') {
+                // Ryddig regnbue (basert på kolonne)
+                const hue = (colIndex / columns) * 360;
+                return `hsl(${hue}, 100%, 50%)`;
+            } 
+            else if (config.colorMode === 'chaos') {
+                // KAOS: Helt tilfeldig farge hver gang
+                const hue = Math.floor(Math.random() * 360);
+                return `hsl(${hue}, 100%, 60%)`;
+            }
+        }
+
         function draw() {
-            // Fade bakgrunnen
             ctx.fillStyle = `rgba(0, 0, 0, ${config.fade})`; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             ctx.font = config.fontSize + 'px monospace';
 
-            for (let i = 0; i < drops.length; i++) {
+            for (let i = 0; i < columns; i++) {
+                // Sikkerhetssjekker
+                if (!drops[i]) drops[i] = 1;
                 if (!speeds[i]) speeds[i] = config.minSpeed;
-                
+                if (!accumulators[i]) accumulators[i] = 0;
+
                 accumulators[i] += speeds[i];
 
                 if (accumulators[i] >= 1) {
-                    // Posisjoner
                     const x = i * config.fontSize;
                     const y = drops[i] * config.fontSize;
                     const prevY = y - config.fontSize;
-
-                    // Velg nytt tegn for TUPPEN
                     const newChar = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
 
-                    // --- STEG 1: Fiks det forrige tegnet (som var hvitt) ---
+                    // Hent riktig farge for akkurat denne operasjonen
+                    const currentColor = getColor(i);
+
+                    // --- STEG 1: Fiks det forrige tegnet ---
                     if (drops[i] > 1 && lastChars[i]) {
-                        // Vask bort det hvite tegnet med en svart boks
+                        // Vask bort det hvite tegnet med svart
                         ctx.fillStyle = 'black';
                         ctx.fillRect(x, prevY, config.fontSize, config.fontSize);
                         
-                        // Tegn det SAMME tegnet som var der, men nå i GRØNT (eller valgt farge)
-                        ctx.fillStyle = config.color;
+                        // Tegn det gamle tegnet.
+                        // MERK: I 'chaos' modus vil halen blinke litt ("glitter-effekt") 
+                        // fordi vi velger ny farge her også. Det er en del av sjarmen!
+                        ctx.fillStyle = currentColor; 
                         ctx.fillText(lastChars[i], x, prevY);
                     }
 
                     // --- STEG 2: Tegn den nye tuppen ---
                     if (config.whiteTip) {
-                        ctx.fillStyle = '#FFF'; // Hvit
+                        ctx.fillStyle = '#FFF'; 
                     } else {
-                        ctx.fillStyle = config.color; 
+                        ctx.fillStyle = currentColor; 
                     }
                     ctx.fillText(newChar, x, y);
 
-                    // --- STEG 3: Lagre tegnet ---
-                    // Vi lagrer 'newChar' slik at vi vet hva vi skal tegne grønt i neste runde
+                    // --- STEG 3: Lagre ---
                     lastChars[i] = newChar;
-
                     accumulators[i] -= 1;
 
                     // Reset
                     if (drops[i] * config.fontSize > canvas.height && Math.random() > 0.96) {
                         drops[i] = 0;
                         speeds[i] = (Math.random() * (config.maxSpeed - config.minSpeed)) + config.minSpeed;
-                        lastChars[i] = ""; // Reset minnet for denne kolonnen
+                        lastChars[i] = ""; 
                     }
-
                     drops[i]++;
                 }
             }
